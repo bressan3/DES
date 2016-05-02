@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "des.h"
+
+typedef struct s_splitKeys{
+    char c[4];
+    char d[4];
+}splitKeys;
 
 const int PC_1[] = {57, 49, 41, 33, 25, 17, 9,
     1, 58, 50, 42, 34, 26, 18,
@@ -11,22 +17,22 @@ const int PC_1[] = {57, 49, 41, 33, 25, 17, 9,
     14, 6, 61, 53, 45, 37, 29,
     21, 13, 5, 28, 20, 12, 4};
 
-void print_char_as_binary(char input) {
-    int i;
-    for (i=0; i<8; i++) {
-        char shift_byte = 0x01 << (7-i);
-        if (shift_byte & input) {
+const int numLeftShifts[] = {1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
+
+void printCharAsBinary(char input) {
+    
+    for (int i = 0; i < 8; i++) {
+        if ((0x01 << (7-i)) & input) // 0x01 = 00000001
             printf("1");
-        } else {
+        else
             printf("0");
-        }
     }
 }
 
 char* buildKPlus(char *key){
     
     // Initializes k+ with all 0's
-    char *kPlus = malloc(8*sizeof(char));
+    char *kPlus = malloc(7*sizeof(char));
     for (int i = 0; i < 8; i++)
         kPlus[i] = 0x00;
     
@@ -44,9 +50,38 @@ char* buildKPlus(char *key){
     return kPlus;
 }
 
+// Makes a left rotating bitshif on d. bits = num bits in d or s + num rotations
+char* leftShift(char *splitKey)
+{
+    const uint8_t octetshifts = 1 / 8;
+    const uint8_t bitshift = 1 % 8;
+    const uint8_t bitsleft = (8 - bitshift);
+    const uint8_t lm = (1 << bitshift) - 1;
+    const uint8_t um = ~lm;
+    
+    char* d = malloc(4*sizeof(char));
+    
+    for (int i = 0; i < 4; i++)
+    {
+        d[(i + 4 - octetshifts) % 4] =
+        ((splitKey[i] << bitshift) & um) |
+        ((splitKey[(i + 1) % 4] >> bitsleft) & lm);
+    }
+    
+    if(((d[3] >> 7) & 1))
+        d[3] |= (1 << 4);
+    if ((d[3] & 0b00000001) == 0)
+        d[3] &= ~(1 << 4);
+    
+    d[3] &= ~(1 << 0);
+    
+    return d;
+}
+
 
 int main(){
 	
+    // Key from the example
     char key[8];
 	key[0] = 0x13;
 	key[1] = 0x34;
@@ -57,11 +92,10 @@ int main(){
 	key[6] = 0xDF;
 	key[7] = 0xF1;
     
-	//printf("K = %s", key); // Should print _4Wy____
     printf("K = ");
     
     for (int i = 0; i < 8; i++)
-        print_char_as_binary(key[i]);
+        printCharAsBinary(key[i]);
     
     printf("\n");
     
@@ -69,19 +103,76 @@ int main(){
     
     printf("K+ = ");
     for (int i = 0; i < 7; i++) {
-        print_char_as_binary(kPlus[i]);
+        printCharAsBinary(kPlus[i]);
     }
     printf("\n");
     
-    /*
-    Binary stuff for tests
-    char a = 0b00000100;
-    print_char_as_binary(a);
+    splitKeys splitKeys[16];
+    
+    // Used to be unsigned
+    //char *c = malloc(4*sizeof(char));
+    strncpy(splitKeys[0].c, kPlus, 4);
+    // Masking
+    splitKeys[0].c[3] &= 0b11110000;
+    for (int i = 0; i < 4; i++) {
+        printCharAsBinary(splitKeys[0].c[i]);
+    }
     printf("\n");
-    a |= (1u << (7 - 1));
-    print_char_as_binary(a);
-    */
+    /*
+    //char *d = malloc(4*sizeof(char));
+    //strncpy(c, (char*)c, 4);
+    c = leftShift(c);
+    c = leftShift(c);
+    c = leftShift(c);
+    c = leftShift(c);
+    for(int i = 0; i < 4; i++)
+        printCharAsBinary(c[i]);
+    printf("\n");
+    c = leftShift(c);
+    //c = rotateLeft(c);
+    
+    for (int i = 0; i < 4; i++) {
+        printCharAsBinary(c[i]);
+    }
+    printf("\n");
+    
+    char *d = malloc(4*sizeof(char));
+    strncpy(d, kPlus + 3, 7);
+    
+    // Masking for d
+    for (int i = 0; i < 4; i ++) {
+        for (int i = 0;  i < 3;  ++i)
+        {
+            d[i] = (d[i] << 1) | ((d[i+1] >> 31) & 1);
+        }
+        d[3] = d[3] << 1;
+    }
+
+    printf("D: ");
+    for (int i = 0; i < 4; i++)
+        printCharAsBinary(d[i]);
+
+    free(c);*/
+    
+    
+    printf("\n");
     
 	
     return 0;
 }
+
+
+
+
+
+/*
+ Binary stuff for tests
+ char a = 0b00000100;
+ print_char_as_binary(a);
+ printf("\n");
+ a |= (1u << (7 - 1));
+ print_char_as_binary(a);
+ */
+
+
+
