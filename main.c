@@ -50,45 +50,45 @@ const int E_BIT_SELECTION [] = {32, 1, 2, 3, 4, 5,
     24, 25, 26, 27, 28, 29,
     28, 29, 30, 31, 32, 1};
 
-const int S1[] = {14,  4, 13,  1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9,  0,  7,
-			 0, 15,  7,  4, 14,  2, 13,  1, 10,  6, 12, 11,  9,  5,  3,  8,
-			 4,  1, 14,  8, 13,  6,  2, 11, 15, 12,  9,  7,  3, 10,  5,  0,
-    15, 12,  8,  2,  4,  9,  1,  7,  5, 11,  3, 14, 10,  0,  6, 13};
+const int S1[] = {14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7,
+    0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8,
+    4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0,
+    15, 12, 8, 2, 4, 9, 1, 7, 5, 11, 3, 14, 10, 0, 6, 13};
 
-const int S2[] = {15,  1,  8, 14,  6, 11,  3,  4,  9,  7,  2, 13, 12,  0,  5, 10,
-			 3, 13,  4,  7, 15,  2,  8, 14, 12,  0,  1, 10,  6,  9, 11,  5,
-			 0, 14,  7, 11, 10,  4, 13,  1,  5,  8, 12,  6,  9,  3,  2, 15,
-    13,  8, 10,  1,  3, 15,  4,  2, 11,  6,  7, 12,  0,  5, 14,  9};
+const int S2[] = {15,  1,   8, 14,   6, 11,   3,  4,   9,  7,   2, 13,  12,  0,   5, 10,
+    3, 13,   4,  7,  15,  2,   8, 14,  12,  0,   1, 10,   6,  9,  11,  5,
+    0, 14,   7, 11,  10,  4,  13,  1,   5,  8,  12,  6,   9,  3,   2, 15,
+    13,  8,  10,  1,   3, 15,   4,  2, 11,  6,   7, 12,   0,  5,  14,  9};
 
-const int S3[] = {10,  0,  9, 14,  6,  3, 15,  5,  1, 13, 12,  7, 11,  4,  2,  8,
-    13,  7,  0,  9,  3,  4,  6, 10,  2,  8,  5, 14, 12, 11, 15,  1,
-    13,  6,  4,  9,  8, 15,  3,  0, 11,  1,  2, 12,  5, 10, 14,  7,
-			 1, 10, 13,  0,  6,  9,  8,  7,  4, 15, 14,  3, 11,  5,  2, 12};
+const int S3[] = {10,  0,   9, 14,   6,  3,  15,  5,   1, 13,  12,  7,  11,  4,   2,  8,
+    13,  7,   0,  9,   3,  4,   6, 10,   2,  8,   5, 14,  12, 11,  15,  1,
+    13,  6,   4,  9,   8, 15,   3,  0,  11,  1,   2, 12,   5, 10,  14,  7,
+    1, 10,  13,  0,   6,  9,   8,  7,   4, 15,  14,  3,  11,  5,   2, 12};
 
-const int S4[] = { 7, 13, 14,  3,  0,  6,  9, 10,  1,  2,  8,  5, 11, 12,  4, 15,
-    13,  8, 11,  5,  6, 15,  0,  3,  4,  7,  2, 12,  1, 10, 14,  9,
-    10,  6,  9,  0, 12, 11,  7, 13, 15,  1,  3, 14,  5,  2,  8,  4,
-			 3, 15,  0,  6, 10,  1, 13,  8,  9,  4,  5, 11, 12,  7,  2, 14};
+const int S4[] = {7, 13,  14,  3,   0,  6, 9, 10,   1,  2,   8,  5,  11, 12,   4, 15,
+    13,  8,  11,  5,   6, 15,   0,  3,   4,  7,   2, 12,   1, 10,  14,  9,
+    10,  6,   9,  0,  12, 11,   7, 13,  15,  1,   3, 14,   5,  2,   8,  4,
+    3, 15,   0,  6,  10,  1,  13,  8,   9,  4,   5, 11,  12,  7,   2, 14};
 
-const int S5[] = { 2, 12,  4,  1,  7, 10, 11,  6,  8,  5,  3, 15, 13,  0, 14,  9,
-    14, 11,  2, 12,  4,  7, 13,  1,  5,  0, 15, 10,  3,  9,  8,  6,
-			 4,  2,  1, 11, 10, 13,  7,  8, 15,  9, 12,  5,  6,  3,  0, 14,
-    11,  8, 12,  7,  1, 14,  2, 13,  6, 15,  0,  9, 10,  4,  5,  3};
+const int S5[] = {2, 12,   4,  1,   7, 10,  11,  6,   8,  5,   3, 15,  13,  0,  14,  9,
+    14, 11,   2, 12,   4,  7,  13,  1,   5,  0,  15, 10,   3,  9,   8,  6,
+    4,  2,   1, 11,  10, 13,   7,  8,  15,  9,  12,  5,   6,  3,   0, 14,
+    11,  8,  12,  7,   1, 14,   2, 13,   6, 15,   0,  9,  10,  4,   5,  3};
 
-const int S6[] = {12,  1, 10, 15,  9,  2,  6,  8,  0, 13,  3,  4, 14,  7,  5, 11,
-    10, 15,  4,  2,  7, 12,  9,  5,  6,  1, 13, 14,  0, 11,  3,  8,
-			 9, 14, 15,  5,  2,  8, 12,  3,  7,  0,  4, 10,  1, 13, 11,  6,
-			 4,  3,  2, 12,  9,  5, 15, 10, 11, 14,  1,  7,  6,  0,  8, 13};
+const int S6[] = {12,  1,  10, 15,   9,  2,   6,  8,   0, 13,   3,  4,  14,  7,   5, 11,
+    10, 15,   4,  2,   7, 12,   9,  5,   6,  1,  13, 14,   0, 11,   3,  8,
+    9, 14,  15,  5,   2,  8,  12,  3,   7,  0,   4, 10,   1, 13,  11,  6,
+    4,  3,   2, 12,   9,  5,  15, 10,  11, 14,   1,  7,   6,  0,   8, 13};
 
-const int S7[] = { 4, 11,  2, 14, 15,  0,  8, 13,  3, 12,  9,  7,  5, 10,  6,  1,
-    13,  0, 11,  7,  4,  9,  1, 10, 14,  3,  5, 12,  2, 15,  8,  6,
-			 1,  4, 11, 13, 12,  3,  7, 14, 10, 15,  6,  8,  0,  5,  9,  2,
-			 6, 11, 13,  8,  1,  4, 10,  7,  9,  5,  0, 15, 14,  2,  3, 12};
+const int S7[] = {4, 11,   2, 14,  15,  0,   8, 13,   3, 12,   9,  7,   5, 10,   6,  1,
+    13,  0,  11,  7,   4,  9,   1, 10,  14,  3,   5, 12,   2, 15,   8,  6,
+    1,  4,  11, 13,  12,  3,   7, 14,  10, 15,   6,  8,   0,  5,   9,  2,
+    6, 11,  13,  8,   1,  4,  10,  7,   9,  5,   0, 15,  14,  2,   3, 12};
 
-const int S8[] = {13,  2,  8,  4,  6, 15, 11,  1, 10,  9,  3, 14,  5,  0, 12,  7,
-			 1, 15, 13,  8, 10,  3,  7,  4, 12,  5,  6, 11,  0, 14,  9,  2,
-			 7, 11,  4,  1,  9, 12, 14,  2,  0,  6, 10, 13, 15,  3,  5,  8,
-			 2,  1, 14,  7,  4, 10,  8, 13, 15, 12,  9,  0,  3,  5,  6, 11};
+const int S8[] = {13,  2,   8,  4,   6, 15,  11,  1,  10,  9,   3, 14,   5,  0,  12,  7,
+    1, 15,  13,  8,  10,  3,   7,  4,  12,  5,   6, 11,   0, 14,   9,  2,
+    7, 11,   4,  1,   9, 12,  14,  2,   0,  6,  10, 13,  15,  3,   5,  8,
+    2,  1,  14,  7,   4, 10,   8, 13,  15, 12,   9,  0,   3,  5,   6, 11};
 
 
 const int P[] = {16, 7, 20, 21,
@@ -234,7 +234,7 @@ char applySTable(char block, const int *sTable){
     printf(" | %d", (int)column);
     printf("\n");
     
-    actualMatrixPosition = (15*row + row) + column;
+    actualMatrixPosition = (15*(int)row + (int)row) + (int)column;
     printf("Actual Position: %d", (int)actualMatrixPosition);
     printf("\n");
     
@@ -261,91 +261,83 @@ char* f(char *previousRight, char *currentSubkey){
     }
     printf("\n");
     
-    typedef struct s_bGroup{
-        char *b;
-    }t_bGroup;
-    
-    t_bGroup bGroup;
-    bGroup.b = malloc(8*sizeof(char));
+    char *b = malloc(8*sizeof(char));
     
     // B1
-    bGroup.b[0] = xorOutputAndKey[0] & 0b11111100;
-    bGroup.b[0] >>= 2;
+    b[0] = xorOutputAndKey[0] & 0b11111100;
+    b[0] >>= 2;
     
     printf("B1: ");
-    printCharAsBinary(bGroup.b[0]);
+    printCharAsBinary(b[0]);
     printf("\n");
     
     // B2
-    bGroup.b[1] = xorOutputAndKey[0] & 0b00000011;
-    bGroup.b[1] <<= 4;
-    bGroup.b[1] |= (xorOutputAndKey[1] >> 4) & 0b00001111;
+    b[1] = xorOutputAndKey[0] & 0b00000011;
+    b[1] <<= 4;
+    b[1] |= (xorOutputAndKey[1] >> 4) & 0b00001111;
     
     printf("B2: ");
-    printCharAsBinary(bGroup.b[1]);
+    printCharAsBinary(b[1]);
     printf("\n");
     
     // B3
-    bGroup.b[2] = (xorOutputAndKey[1] << 2) & 0b00111100;
-    bGroup.b[2] |= (xorOutputAndKey[2] >> 6) & 0b00000011;
+    b[2] = (xorOutputAndKey[1] << 2) & 0b00111100;
+    b[2] |= (xorOutputAndKey[2] >> 6) & 0b00000011;
     
     printf("B3: ");
-    printCharAsBinary(bGroup.b[2]);
+    printCharAsBinary(b[2]);
     printf("\n");
     
     // B4
-    bGroup.b[3] = xorOutputAndKey[2] & 0b00111111;
+    b[3] = xorOutputAndKey[2] & 0b00111111;
     
     printf("B4: ");
-    printCharAsBinary(bGroup.b[3]);
+    printCharAsBinary(b[3]);
     printf("\n");
     
     // B5
-    bGroup.b[4] = (xorOutputAndKey[3] & 0b11111100) >> 2;
+    b[4] = (xorOutputAndKey[3] & 0b11111100) >> 2;
     
     printf("B5: ");
-    printCharAsBinary(bGroup.b[4]);
+    printCharAsBinary(b[4]);
     printf("\n");
     
     // B6
-    bGroup.b[5] = (xorOutputAndKey[3] & 0b00000011) << 4;
-    bGroup.b[5] |= (xorOutputAndKey[4] & 0b11110000) >> 4;
+    b[5] = (xorOutputAndKey[3] & 0b00000011) << 4;
+    b[5] |= (xorOutputAndKey[4] & 0b11110000) >> 4;
     
     printf("B6: ");
-    printCharAsBinary(bGroup.b[5]);
+    printCharAsBinary(b[5]);
     printf("\n");
     
     // B7
-    bGroup.b[6] = (xorOutputAndKey[4] & 0b00001111) << 2;
-    bGroup.b[6] |= (xorOutputAndKey[5] & 0b11000000) >> 2;
+    b[6] = (xorOutputAndKey[4] & 0b00001111) << 2;
+    b[6] |= (xorOutputAndKey[5] & 0b11000000) >> 2;
     
     printf("B7: ");
-    printCharAsBinary(bGroup.b[6]);
+    printCharAsBinary(b[6]);
     printf("\n");
     
     // B8
-    bGroup.b[7] = xorOutputAndKey[5] & 0b00111111;
+    b[7] = xorOutputAndKey[5] & 0b00111111;
     
     printf("B7: ");
-    printCharAsBinary(bGroup.b[7]);
+    printCharAsBinary(b[7]);
     printf("\n");
-    
-    
-    // ...
     
     char *sb = malloc(4*sizeof(char));
     
-    sb[0] = applySTable(bGroup.b[0], S1) << 4;
-    sb[0] |= applySTable(bGroup.b[1], S2);
+    sb[0] = applySTable(b[0], S1) << 4;
+    sb[0] |= applySTable(b[1], S2);
     
-    sb[1] = applySTable(bGroup.b[2], S3) << 4;
-    sb[1] |= applySTable(bGroup.b[3], S4);
+    sb[1] = applySTable(b[2], S3) << 4;
+    sb[1] |= applySTable(b[3], S4);
     
-    sb[2] = applySTable(bGroup.b[4], S5) << 4;
-    sb[2] |= applySTable(bGroup.b[5], S6);
+    sb[2] = applySTable(b[4], S5) << 4;
+    sb[2] |= applySTable(b[5], S6);
     
-    sb[3] = applySTable(bGroup.b[6], S7) << 4;
-    sb[3] |= applySTable(bGroup.b[7], S8);
+    sb[3] = applySTable(b[6], S7) << 4;
+    sb[3] |= applySTable(b[7], S8);
     
     printf("S1(011011) = ");
     printCharAsBinary(sb[3]);
@@ -452,7 +444,7 @@ int main(){
     
     // (Subkeys Part) -------------------------------------------------------------------------
     // (Message Part) -------------------------------------------------------------------------
-    
+   
     // M = 0123456789ABCDEF
     char message[8];
     message[0] = 0x01;
@@ -463,6 +455,16 @@ int main(){
     message[5] = 0xAB;
     message[6] = 0xCD;
     message[7] = 0xEF;
+    
+    /*char message[8];
+    message[0] = 0x37;
+    message[1] = 0x6B;
+    message[2] = 0x98;
+    message[3] = 0x1F;
+    message[4] = 0x37;
+    message[5] = 0x5E;
+    message[6] = 0x53;
+    message[7] = 0xEF;*/
     
     char *IP = applyTable(message, 64, IP_1);
     
@@ -495,13 +497,31 @@ int main(){
     for (int i = 0; i < 4; i++) {
         printCharAsBinary(test[i]);
     }
-    printf("\f");
+    printf("\n");
     
+    char *r1 = xorString(messageSplit[0].l, test, 4);
+    char *l1 = malloc(4*sizeof(char));
+    copyString(l1, messageSplit[0].r, 0, 3);
+    
+    printf("R1: ");
+    for (int i = 0; i < 4; i++) {
+        printCharAsBinary(r1[i]);
+    }
+    printf("\n");
+    
+    printf("L1: ");
+    for (int i = 0; i < 4; i++) {
+        printCharAsBinary(l1[i]);
+    }
+    printf("\n");
+    
+    // Everything works fine untill here ...
+    
+    // 16 x L(n) = R(n-1) | R(n) = L(n-1) + f(R(n-1), K(n))
     for (int i = 1; i < 17; i++) {
-        messageSplit[i].l = malloc(4*sizeof(char));
-        messageSplit[i].r = malloc(4*sizeof(char));
-        copyString(messageSplit[i].l, messageSplit[i-1].r, 0, 3);
         messageSplit[i].r = xorString(messageSplit[i-1].l, f(messageSplit[i-1].r, subkeys[i].k), 4);
+        messageSplit[i].l = malloc(4*sizeof(char));
+        copyString(messageSplit[i].l, messageSplit[i-1].r, 0, 3);
     }
     
     printf("R1 = ");
@@ -524,14 +544,30 @@ int main(){
     }
     printf("\n");
     
-    /*char *finalPermutation = applyTable(L16R16, 8, FINAL_PERMUTATION);
+    
+    char *R16L16 = malloc(8*sizeof(char));
+    strcat(R16L16, messageSplit[16].r);
+    strcat(R16L16, messageSplit[16].l);
+    char *finalPermutation = applyTable(R16L16, 64, FINAL_PERMUTATION);
     
     printf("Final Permutation: \n");
     for (int i = 0; i < 8; i++) {
         printCharAsBinary(finalPermutation[i]);
     }
-    printf("\n");*/
+    printf("\n");
     
+    printf("Message: ");
+    for (int i = 0; i < 8; i++)
+        printf("%x", (unsigned char)message[i]);
+    printf("\n");
+    
+    /*printf("Encrypted Message: ");
+    for (int i = 0; i < 8; i++)
+        printf("%x", (unsigned char)finalPermutation[i]);*/
+    
+    printf("Decrypted Message: ");
+    for (int i = 0; i < 8; i++)
+        printf("%x", (unsigned char)finalPermutation[i]);
     
     // (Memory Freeing) ------------------------------------------------------------------------
     
