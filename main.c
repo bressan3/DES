@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
+// true for encryption / false for decryption
+bool mode = true;
 
 typedef struct s_splitKeys{
     char *c;
@@ -11,6 +15,8 @@ typedef struct s_splitKeys{
 typedef struct s_subkeys{
     char *k;
 }subkeys;
+
+
 
 const int PC_1[] = {57, 49, 41, 33, 25, 17, 9,
     1, 58, 50, 42, 34, 26, 18,
@@ -533,7 +539,7 @@ int main(){
     }
     printf("\n");
     
-    char *test = f(messageSplit[0].r, subkeys[1].k);
+    char *test = f(messageSplit[0].r, subkeys[16].k);
     printf("f: ");
     for (int i = 0; i < 4; i++) {
         printCharAsBinary(test[i]);
@@ -559,13 +565,18 @@ int main(){
     // Everything works fine untill here ...
     
     // 16 x L(n) = R(n-1) | R(n) = L(n-1) + f(R(n-1), K(n))
+    int j;
+    if (mode) j = 1;
+    else j = 16;
     for (int i = 1; i < 17; i++) {
-        messageSplit[i].r = xorString(messageSplit[i-1].l, f(messageSplit[i-1].r, subkeys[i].k), 4);
+        messageSplit[i].r = xorString(messageSplit[i-1].l, f(messageSplit[i-1].r, subkeys[j].k), 4);
         messageSplit[i].l = malloc(4*sizeof(char));
         copyString(messageSplit[i].l, messageSplit[i-1].r, 0, 3);
+        if (mode) j++;
+        else j--;
     }
     
-    char *test2 = test2 = f(r1, subkeys[2].k);
+    /*char *test2 = test2 = f(r1, subkeys[2].k);
     
     printf("f2: ");
     for (int i = 0; i < 4; i++) {
@@ -589,24 +600,33 @@ int main(){
     }
     printf("\n");
     
-    //char *L16R16 = malloc(8*sizeof(char));
+    //char *L16R16 = malloc(8*sizeof(char));*/
     
-    printf("R2: \n");
+    printf("L1 New: \n");
     for (int i = 0; i < 4; i++) {
-        printCharAsBinary(messageSplit[2].r[i]);
+        printCharAsBinary(messageSplit[16].l[i]);
     }
     printf("\n");
     
     
-    char *R16L16 = malloc(8*sizeof(char));
-    strcat(R16L16, messageSplit[16].r);
-    strcat(R16L16, messageSplit[16].l);
+    char *R16L16 = malloc(9*sizeof(char));
+    R16L16[8] = '\0';
+    copyString(R16L16, messageSplit[16].r, 0, 3);
+    for (int i = 4; i < 8; i++) {
+        R16L16[i] = messageSplit[16].l[i-4];
+    }
     char *finalPermutation = applyTable(R16L16, 64, FINAL_PERMUTATION);
+    
+    printf("R0L0: ");
+    for (int i = 0; i < 8; i++)
+        printCharAsBinary(R16L16[i]);
+    printf("\n");
     
     printf("Final Permutation: \n");
     for (int i = 0; i < 8; i++) {
         printCharAsBinary(finalPermutation[i]);
     }
+    printf(" | %s", finalPermutation);
     printf("\n");
     
     printf("Message: ");
@@ -617,6 +637,8 @@ int main(){
     printf("Encrypted Message: ");
      for (int i = 0; i < 8; i++)
          printf("%x", (unsigned char)finalPermutation[i]);
+    
+    free(R16L16);
     
     // (Memory Freeing) ------------------------------------------------------------------------
     
