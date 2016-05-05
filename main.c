@@ -317,7 +317,7 @@ void writeToFile(char* content, char*path){
 
 int main(int argc, char * argv[]){
     
-    printf(ANSI_COLOR_RED "\n\nMake sure your key and message are both 8 bytes long\n\n" ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_RED "\n\nMake sure your key and message are both 8 bytes long max\n\n" ANSI_COLOR_RESET);
     
     // true for encryption / false for decryption
     bool mode = true;
@@ -480,7 +480,12 @@ int main(int argc, char * argv[]){
     
     free(subkeys);
     free(IP);
+    for(int i = 0; i < 17; i++){
+        free(messageSplit[i].r);
+        free(messageSplit[i].l);
+    }
     free(R16L16);
+    free(finalPermutation);
     
     printf("\n");
     
