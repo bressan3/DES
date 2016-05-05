@@ -3,8 +3,9 @@
 #include <string.h>
 #include <stdbool.h>
 
-// true for encryption / false for decryption
-bool mode = true;
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
 
 typedef struct s_splitKeys{
     char *c;
@@ -15,8 +16,6 @@ typedef struct s_splitKeys{
 typedef struct s_subkeys{
     char *k;
 }subkeys;
-
-
 
 const int PC_1[] = {57, 49, 41, 33, 25, 17, 9,
     1, 58, 50, 42, 34, 26, 18,
@@ -230,19 +229,7 @@ char applySTable(char block, const int *sTable){
     
     column = (block & 0b00011110) >> 1;
     
-    /*printf("Row:");
-    printCharAsBinary(row);
-    printf(" | %d", (int)row);
-    printf("\n");
-    
-    printf("Column:");
-    printCharAsBinary(column);
-    printf(" | %d", (int)column);
-    printf("\n");*/
-    
     actualMatrixPosition = (15*(int)row + (int)row) + (int)column;
-    /*printf("Actual Position: %d", (int)actualMatrixPosition);
-    printf("\n");*/
     
     return (char)sTable[actualMatrixPosition];
 }
@@ -252,82 +239,38 @@ char* f(char *previousRight, char *currentSubkey){
     // E(R(n-1))
     char *expandedPreviousRight = applyTable(previousRight, 48, E_BIT_SELECTION);
     
-    printf("E(0): ");
-    for (int i = 0; i < 6; i++) {
-        printCharAsBinary(expandedPreviousRight[i]);
-    }
-    printf("\n");
-    
     // K(n)+E(R(n-1)) = B1B2B3B4B5B6B7B8 (6 by 6)
     char *xorOutputAndKey = xorString(currentSubkey, expandedPreviousRight, 6);
-    
-    printf("K(1)+E(R(0)): ");
-    for (int i = 0; i < 6; i++) {
-        printCharAsBinary(xorOutputAndKey[i]);
-    }
-    printf("\n");
     
     char *b = malloc(8*sizeof(char));
     
     // B1
     b[0] = (xorOutputAndKey[0] & 0b11111100) >> 2;
     
-    printf("B1: ");
-    printCharAsBinary(b[0]);
-    printf("\n");
-    
     // B2
     b[1] = (xorOutputAndKey[0] & 0b00000011) << 4;
     b[1] |= (xorOutputAndKey[1] & 0b11110000) >> 4;
-    
-    printf("B2: ");
-    printCharAsBinary(b[1]);
-    printf("\n");
     
     // B3
     b[2] = (xorOutputAndKey[1] & 0b00001111) << 2;
     b[2] |= (xorOutputAndKey[2] & 0b11000000) >> 6;
     
-    printf("B3: ");
-    printCharAsBinary(b[2]);
-    printf("\n");
-    
     // B4
     b[3] = xorOutputAndKey[2] & 0b00111111;
     
-    printf("B4: ");
-    printCharAsBinary(b[3]);
-    printf("\n");
-    
     // B5
     b[4] = (xorOutputAndKey[3] & 0b11111100) >> 2;
-    
-    printf("B5: ");
-    printCharAsBinary(b[4]);
-    printf("\n");
     
     // B6
     b[5] = (xorOutputAndKey[3] & 0b00000011) << 4;
     b[5] |= (xorOutputAndKey[4] & 0b11110000) >> 4;
     
-    printf("B6: ");
-    printCharAsBinary(b[5]);
-    printf("\n");
-    
-    // B7 Error HERE
+    // B7
     b[6] = (xorOutputAndKey[4] & 0b00001111) << 2;
     b[6] |= (xorOutputAndKey[5] & 0b11000000) >> 6;
     
-    printf("B7: ");
-    printCharAsBinary(b[6]);
-    printf("\n");
-    
     // B8
     b[7] = xorOutputAndKey[5] & 0b00111111;
-    
-    printf("B7: ");
-    printCharAsBinary(b[7]);
-    printf("\n");
     
     char *sb = malloc(4*sizeof(char));
     
@@ -343,52 +286,67 @@ char* f(char *previousRight, char *currentSubkey){
     sb[3] = applySTable(b[6], S7) << 4;
     sb[3] |= applySTable(b[7], S8);
     
-    printf("SB = ");
-    for (int i = 0; i < 4; i++)
-        printCharAsBinary(sb[i]);
-    printf("\n");
-    
     
     return applyTable(sb, 32, P);
 }
 
-int main(){
+char* readFile(char *path){
+    FILE *keyFile = fopen(path, "r");
     
-    // Key from the example
-    /*char key[8];
-    key[0] = 0x13;
-    key[1] = 0x34;
-    key[2] = 0x57;
-    key[3] = 0x79;
-    key[4] = 0x9B;
-    key[5] = 0xBC;
-    key[6] = 0xDF;
-    key[7] = 0xF1;*/
+    if(keyFile == NULL){
+        printf("File not found\n");
+        exit (-1);
+    }
     
-    char key[8];
-    key[0] = 0x4B;
-    key[1] = 0x41;
-    key[2] = 0x53;
-    key[3] = 0x48;
-    key[4] = 0x49;
-    key[5] = 0x53;
-    key[6] = 0x41;
-    key[7] = 0x42;
+    char line[BUFSIZ];
     
-    printf("K = ");
+    char *fileLine = fgets(line, sizeof(line), keyFile);
     
-    for (int i = 0; i < 8; i++)
-        printCharAsBinary(key[i]);
+    fclose(keyFile);
     
-    printf("\n");
+    return fileLine;
+}
+
+void writeToFile(char* content, char*path){
+    FILE *cyphertextFile= fopen(path, "w+");
+    
+    fputs(content, cyphertextFile);
+    
+    fclose(cyphertextFile);
+}
+
+int main(int argc, char * argv[]){
+    
+    printf(ANSI_COLOR_RED "\n\nMake sure your key and message are both 8 bytes long\n\n" ANSI_COLOR_RESET);
+    
+    // true for encryption / false for decryption
+    bool mode = true;
+    
+    if (argv[1] == NULL) {
+        printf("\n\nExample usage: DES (-e|-d) [KEY_FILE TEXT_FILE]\n\n");
+        return -1;
+    } else {
+        if (strcmp(argv[1], "-e") == 0) {
+            mode = true;
+        } else if (strcmp(argv[1], "-d") == 0) {
+            mode = false;
+        } else {
+            printf("\n\nExample usage: DES (-e|-d) [KEY_FILE TEXT_FILE]\n\n");
+            return -1;
+        }
+    }
+    
+    char key[9], message[9];
+    
+    if (argv[2] == NULL || argv[3] == NULL) {
+        printf("\n\nExample usage: DES (-e|-d) [KEY_FILE TEXT_FILE]\n\n");
+        return -1;
+    } else {
+        copyString(key, readFile(argv[2]), 0, 7);
+        copyString(message, readFile(argv[3]), 0, 7);
+    }
     
     char *kPlus = applyTable(key, 56, PC_1);
-    
-    printf("K+ = ");
-    for (int i = 0; i < 7; i++) {
-        printCharAsBinary(kPlus[i]);
-    }
-    printf("\n");
     
     // (Subkeys Part) -------------------------------------------------------------------------
     
@@ -400,11 +358,6 @@ int main(){
     copyString(splitKeys[0].c, kPlus, 0, 3);
     // Masking
     splitKeys[0].c[3] &= 0b11110000;
-    printf("C: ");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(splitKeys[0].c[i]);
-    }
-    printf("\n");
     
     copyString(splitKeys[0].d, kPlus, 3, 7);
     
@@ -417,11 +370,6 @@ int main(){
         splitKeys[0].d[3] = splitKeys[0].d[3] << 1;
     }
     
-    printf("D: ");
-    for (int i = 0; i < 4; i++)
-        printCharAsBinary(splitKeys[0].d[i]);
-    printf("\n");
-    
     // Do the left shifts according to the table
     for (int i = 1; i < 17; i ++) {
         splitKeys[i].c = malloc(4*sizeof(char));
@@ -433,18 +381,6 @@ int main(){
             splitKeys[i].d = leftShift(splitKeys[i].d);
         }
     }
-    
-    printf("C16: ");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(splitKeys[16].c[i]);
-    }
-    printf("\n");
-    
-    printf("D16: ");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(splitKeys[16].d[i]);
-    }
-    printf("\n");
     
     //unsigned char *concatenated = concatenateBits(splitKeys[0].c, splitKeys[0].d);
     splitKeys[0].cd = concatenateBits(splitKeys[0].c, splitKeys[0].d);
@@ -463,57 +399,10 @@ int main(){
         subkeys[i].k = applyTable((char*)splitKeys[i].cd, 48, PC_2);
     }
     
-    printf("K2: ");
-    for (int i = 0; i < 6; i++) {
-        printCharAsBinary(subkeys[2].k[i]);
-    }
-    printf("\n");
-    
-    // Works fine!
-    
     // (Subkeys Part) -------------------------------------------------------------------------
     // (Message Part) -------------------------------------------------------------------------
-   
-    // M = 0123456789ABCDEF
-    /*char message[8];
-    message[0] = 0x01;
-    message[1] = 0x23;
-    message[2] = 0x45;
-    message[3] = 0x67;
-    message[4] = 0x89;
-    message[5] = 0xAB;
-    message[6] = 0xCD;
-    message[7] = 0xEF;*/
-    
-    // 4e45565251554954
-    char message[8];
-    message[0] = 0x4E;
-    message[1] = 0x45;
-    message[2] = 0x56;
-    message[3] = 0x52;
-    message[4] = 0x51;
-    message[5] = 0x55;
-    message[6] = 0x49;
-    message[7] = 0x54;
-    
-    // 763549d38b570c0e
-    /*char message[8];
-    message[0] = 0x76;
-    message[1] = 0x35;
-    message[2] = 0x49;
-    message[3] = 0xD3;
-    message[4] = 0x8B;
-    message[5] = 0x57;
-    message[6] = 0x0C;
-    message[7] = 0x0E;*/
     
     char *IP = applyTable(message, 64, IP_1);
-    
-    printf("IP: ");
-    for (int i = 0; i < 8; i++) {
-        printCharAsBinary(IP[i]);
-    }
-    printf("\n");
     
     typedef struct s_messageSplit{
         char *l;
@@ -527,43 +416,6 @@ int main(){
     copyString(messageSplit[0].l, IP, 0, 3);
     copyString(messageSplit[0].r, IP, 4, 7);
     
-    printf("L0: ");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(messageSplit[0].l[i]);
-    }
-    printf("\n");
-    
-    printf("R0: ");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(messageSplit[0].r[i]);
-    }
-    printf("\n");
-    
-    char *test = f(messageSplit[0].r, subkeys[16].k);
-    printf("f: ");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(test[i]);
-    }
-    printf("\n");
-    
-    char *r1 = xorString(messageSplit[0].l, test, 4);
-    char *l1 = malloc(4*sizeof(char));
-    copyString(l1, messageSplit[0].r, 0, 3);
-    
-    printf("R1: ");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(r1[i]);
-    }
-    printf("\n");
-    
-    printf("L1: ");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(l1[i]);
-    }
-    printf("\n");
-    
-    // Everything works fine untill here ...
-    
     // 16 x L(n) = R(n-1) | R(n) = L(n-1) + f(R(n-1), K(n))
     int j;
     if (mode) j = 1;
@@ -576,39 +428,6 @@ int main(){
         else j--;
     }
     
-    /*char *test2 = test2 = f(r1, subkeys[2].k);
-    
-    printf("f2: ");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(test2[i]);
-    }
-    printf("\n");
-    
-    char *r2 = xorString(l1, test2, 4);
-    char *l2 = malloc(4*sizeof(char));
-    copyString(l2, r1, 0, 3);
-    
-    printf("R2 = ");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(r2[i]);
-    }
-    printf("\n");
-    
-    printf("L2 = ");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(l2[i]);
-    }
-    printf("\n");
-    
-    //char *L16R16 = malloc(8*sizeof(char));*/
-    
-    printf("L1 New: \n");
-    for (int i = 0; i < 4; i++) {
-        printCharAsBinary(messageSplit[16].l[i]);
-    }
-    printf("\n");
-    
-    
     char *R16L16 = malloc(9*sizeof(char));
     R16L16[8] = '\0';
     copyString(R16L16, messageSplit[16].r, 0, 3);
@@ -617,32 +436,40 @@ int main(){
     }
     char *finalPermutation = applyTable(R16L16, 64, FINAL_PERMUTATION);
     
-    printf("R0L0: ");
-    for (int i = 0; i < 8; i++)
-        printCharAsBinary(R16L16[i]);
-    printf("\n");
-    
-    printf("Final Permutation: \n");
+    printf(ANSI_COLOR_GREEN "Final Permutation: \n" ANSI_COLOR_RESET);
     for (int i = 0; i < 8; i++) {
         printCharAsBinary(finalPermutation[i]);
     }
-    printf(" | %s", finalPermutation);
     printf("\n");
     
-    printf("Message: ");
+    printf(ANSI_COLOR_GREEN "Message: " ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_RED "HEX: " ANSI_COLOR_RESET);
     for (int i = 0; i < 8; i++)
         printf("%x", (unsigned char)message[i]);
+    if (mode){
+        printf(ANSI_COLOR_GREEN " | " ANSI_COLOR_RESET);
+        printf(ANSI_COLOR_RED "String: " ANSI_COLOR_RESET);
+        printf("%s", message);
+    }
     printf("\n");
     
-    printf("Encrypted Message: ");
+    if (mode)
+        printf(ANSI_COLOR_GREEN "Encrypted Message: " ANSI_COLOR_RESET);
+    else
+        printf(ANSI_COLOR_GREEN "Decrypted Message: " ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_RED "HEX: " ANSI_COLOR_RESET);
      for (int i = 0; i < 8; i++)
          printf("%x", (unsigned char)finalPermutation[i]);
+    printf(ANSI_COLOR_GREEN " | " ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_RED "String: " ANSI_COLOR_RESET);
+    printf("%s", finalPermutation);
     
-    free(R16L16);
+    if(mode)
+        writeToFile(finalPermutation, "cyphertext");
     
     // (Memory Freeing) ------------------------------------------------------------------------
     
-    /*free(kPlus);
+    free(kPlus);
     for (int i = 16; i >= 0; i--) {
         free(splitKeys[i].c);
         free(splitKeys[i].d);
@@ -652,7 +479,8 @@ int main(){
         free(subkeys[i].k);
     
     free(subkeys);
-    free(IP);*/
+    free(IP);
+    free(R16L16);
     
     printf("\n");
     
