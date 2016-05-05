@@ -184,7 +184,7 @@ unsigned char* concatenateBits(char *c, char *d){
     unsigned char *concatenatedString = malloc(8*sizeof(char));
     int table[] = {0b00010000, 0b00100000, 0b01000000, 0b10000000};
     
-    strncpy((char*)concatenatedString, c, 4);
+    copyString((char*)concatenatedString, c, 0, 3);
     
     for (int i = 0; i < 4; i++) {
         if(d[0] & table[i])
@@ -224,7 +224,7 @@ char applySTable(char block, const int *sTable){
     
     column = (block & 0b00011110) >> 1;
     
-    printf("Row:");
+    /*printf("Row:");
     printCharAsBinary(row);
     printf(" | %d", (int)row);
     printf("\n");
@@ -232,17 +232,17 @@ char applySTable(char block, const int *sTable){
     printf("Column:");
     printCharAsBinary(column);
     printf(" | %d", (int)column);
-    printf("\n");
+    printf("\n");*/
     
     actualMatrixPosition = (15*(int)row + (int)row) + (int)column;
-    printf("Actual Position: %d", (int)actualMatrixPosition);
-    printf("\n");
+    /*printf("Actual Position: %d", (int)actualMatrixPosition);
+    printf("\n");*/
     
     return (char)sTable[actualMatrixPosition];
 }
 
 char* f(char *previousRight, char *currentSubkey){
-
+    
     // E(R(n-1))
     char *expandedPreviousRight = applyTable(previousRight, 48, E_BIT_SELECTION);
     
@@ -264,25 +264,23 @@ char* f(char *previousRight, char *currentSubkey){
     char *b = malloc(8*sizeof(char));
     
     // B1
-    b[0] = xorOutputAndKey[0] & 0b11111100;
-    b[0] >>= 2;
+    b[0] = (xorOutputAndKey[0] & 0b11111100) >> 2;
     
     printf("B1: ");
     printCharAsBinary(b[0]);
     printf("\n");
     
     // B2
-    b[1] = xorOutputAndKey[0] & 0b00000011;
-    b[1] <<= 4;
-    b[1] |= (xorOutputAndKey[1] >> 4) & 0b00001111;
+    b[1] = (xorOutputAndKey[0] & 0b00000011) << 4;
+    b[1] |= (xorOutputAndKey[1] & 0b11110000) >> 4;
     
     printf("B2: ");
     printCharAsBinary(b[1]);
     printf("\n");
     
     // B3
-    b[2] = (xorOutputAndKey[1] << 2) & 0b00111100;
-    b[2] |= (xorOutputAndKey[2] >> 6) & 0b00000011;
+    b[2] = (xorOutputAndKey[1] & 0b00001111) << 2;
+    b[2] |= (xorOutputAndKey[2] & 0b11000000) >> 6;
     
     printf("B3: ");
     printCharAsBinary(b[2]);
@@ -310,9 +308,9 @@ char* f(char *previousRight, char *currentSubkey){
     printCharAsBinary(b[5]);
     printf("\n");
     
-    // B7
+    // B7 Error HERE
     b[6] = (xorOutputAndKey[4] & 0b00001111) << 2;
-    b[6] |= (xorOutputAndKey[5] & 0b11000000) >> 2;
+    b[6] |= (xorOutputAndKey[5] & 0b11000000) >> 6;
     
     printf("B7: ");
     printCharAsBinary(b[6]);
@@ -339,25 +337,37 @@ char* f(char *previousRight, char *currentSubkey){
     sb[3] = applySTable(b[6], S7) << 4;
     sb[3] |= applySTable(b[7], S8);
     
-    printf("S1(011011) = ");
-    printCharAsBinary(sb[3]);
+    printf("SB = ");
+    for (int i = 0; i < 4; i++)
+        printCharAsBinary(sb[i]);
     printf("\n");
+    
     
     return applyTable(sb, 32, P);
 }
 
 int main(){
-	
+    
     // Key from the example
+    /*char key[8];
+    key[0] = 0x13;
+    key[1] = 0x34;
+    key[2] = 0x57;
+    key[3] = 0x79;
+    key[4] = 0x9B;
+    key[5] = 0xBC;
+    key[6] = 0xDF;
+    key[7] = 0xF1;*/
+    
     char key[8];
-	key[0] = 0x13;
-	key[1] = 0x34;
-	key[2] = 0x57;
-	key[3] = 0x79;
-	key[4] = 0x9B;
-	key[5] = 0xBC;
-	key[6] = 0xDF;
-	key[7] = 0xF1;
+    key[0] = 0x4B;
+    key[1] = 0x41;
+    key[2] = 0x53;
+    key[3] = 0x48;
+    key[4] = 0x49;
+    key[5] = 0x53;
+    key[6] = 0x41;
+    key[7] = 0x42;
     
     printf("K = ");
     
@@ -381,7 +391,7 @@ int main(){
     splitKeys[0].c = malloc(4*sizeof(char));
     splitKeys[0].d = malloc(4*sizeof(char));
     
-    strncpy(splitKeys[0].c, kPlus, 4);
+    copyString(splitKeys[0].c, kPlus, 0, 3);
     // Masking
     splitKeys[0].c[3] &= 0b11110000;
     printf("C: ");
@@ -390,7 +400,7 @@ int main(){
     }
     printf("\n");
     
-    strncpy(splitKeys[0].d, kPlus + 3, 7);
+    copyString(splitKeys[0].d, kPlus, 3, 7);
     
     // Masking for d
     for (int i = 0; i < 4; i ++) {
@@ -400,24 +410,35 @@ int main(){
         }
         splitKeys[0].d[3] = splitKeys[0].d[3] << 1;
     }
-
+    
     printf("D: ");
     for (int i = 0; i < 4; i++)
         printCharAsBinary(splitKeys[0].d[i]);
-    
     printf("\n");
     
     // Do the left shifts according to the table
     for (int i = 1; i < 17; i ++) {
         splitKeys[i].c = malloc(4*sizeof(char));
         splitKeys[i].d = malloc(4*sizeof(char));
-        strncpy(splitKeys[i].c, splitKeys[i - 1].c, 4);
-        strncpy(splitKeys[i].d, splitKeys[i - 1].d, 4);
+        copyString(splitKeys[i].c, splitKeys[i - 1].c, 0, 3);
+        copyString(splitKeys[i].d, splitKeys[i - 1].d, 0, 3);
         for (int j = 1; j <= numLeftShifts[i - 1]; j++){
             splitKeys[i].c = leftShift(splitKeys[i].c);
             splitKeys[i].d = leftShift(splitKeys[i].d);
         }
     }
+    
+    printf("C16: ");
+    for (int i = 0; i < 4; i++) {
+        printCharAsBinary(splitKeys[16].c[i]);
+    }
+    printf("\n");
+    
+    printf("D16: ");
+    for (int i = 0; i < 4; i++) {
+        printCharAsBinary(splitKeys[16].d[i]);
+    }
+    printf("\n");
     
     //unsigned char *concatenated = concatenateBits(splitKeys[0].c, splitKeys[0].d);
     splitKeys[0].cd = concatenateBits(splitKeys[0].c, splitKeys[0].d);
@@ -436,17 +457,19 @@ int main(){
         subkeys[i].k = applyTable((char*)splitKeys[i].cd, 48, PC_2);
     }
     
-    printf("K16: ");
+    printf("K2: ");
     for (int i = 0; i < 6; i++) {
-        printCharAsBinary(subkeys[16].k[i]);
+        printCharAsBinary(subkeys[2].k[i]);
     }
     printf("\n");
+    
+    // Works fine!
     
     // (Subkeys Part) -------------------------------------------------------------------------
     // (Message Part) -------------------------------------------------------------------------
    
     // M = 0123456789ABCDEF
-    char message[8];
+    /*char message[8];
     message[0] = 0x01;
     message[1] = 0x23;
     message[2] = 0x45;
@@ -454,19 +477,37 @@ int main(){
     message[4] = 0x89;
     message[5] = 0xAB;
     message[6] = 0xCD;
-    message[7] = 0xEF;
-    
-    /*char message[8];
-    message[0] = 0x37;
-    message[1] = 0x6B;
-    message[2] = 0x98;
-    message[3] = 0x1F;
-    message[4] = 0x37;
-    message[5] = 0x5E;
-    message[6] = 0x53;
     message[7] = 0xEF;*/
     
+    // 4e45565251554954
+    char message[8];
+    message[0] = 0x4E;
+    message[1] = 0x45;
+    message[2] = 0x56;
+    message[3] = 0x52;
+    message[4] = 0x51;
+    message[5] = 0x55;
+    message[6] = 0x49;
+    message[7] = 0x54;
+    
+    // 763549d38b570c0e
+    /*char message[8];
+    message[0] = 0x76;
+    message[1] = 0x35;
+    message[2] = 0x49;
+    message[3] = 0xD3;
+    message[4] = 0x8B;
+    message[5] = 0x57;
+    message[6] = 0x0C;
+    message[7] = 0x0E;*/
+    
     char *IP = applyTable(message, 64, IP_1);
+    
+    printf("IP: ");
+    for (int i = 0; i < 8; i++) {
+        printCharAsBinary(IP[i]);
+    }
+    printf("\n");
     
     typedef struct s_messageSplit{
         char *l;
@@ -524,23 +565,35 @@ int main(){
         copyString(messageSplit[i].l, messageSplit[i-1].r, 0, 3);
     }
     
-    printf("R1 = ");
+    char *test2 = test2 = f(r1, subkeys[2].k);
+    
+    printf("f2: ");
     for (int i = 0; i < 4; i++) {
-        printCharAsBinary(messageSplit[1].r[i]);
+        printCharAsBinary(test2[i]);
     }
     printf("\n");
     
-    printf("L1 = ");
+    char *r2 = xorString(l1, test2, 4);
+    char *l2 = malloc(4*sizeof(char));
+    copyString(l2, r1, 0, 3);
+    
+    printf("R2 = ");
     for (int i = 0; i < 4; i++) {
-        printCharAsBinary(messageSplit[1].l[i]);
+        printCharAsBinary(r2[i]);
+    }
+    printf("\n");
+    
+    printf("L2 = ");
+    for (int i = 0; i < 4; i++) {
+        printCharAsBinary(l2[i]);
     }
     printf("\n");
     
     //char *L16R16 = malloc(8*sizeof(char));
     
-    printf("R16: \n");
+    printf("R2: \n");
     for (int i = 0; i < 4; i++) {
-        printCharAsBinary(messageSplit[16].r[i]);
+        printCharAsBinary(messageSplit[2].r[i]);
     }
     printf("\n");
     
@@ -561,17 +614,13 @@ int main(){
         printf("%x", (unsigned char)message[i]);
     printf("\n");
     
-    /*printf("Encrypted Message: ");
-    for (int i = 0; i < 8; i++)
-        printf("%x", (unsigned char)finalPermutation[i]);*/
-    
-    printf("Decrypted Message: ");
-    for (int i = 0; i < 8; i++)
-        printf("%x", (unsigned char)finalPermutation[i]);
+    printf("Encrypted Message: ");
+     for (int i = 0; i < 8; i++)
+         printf("%x", (unsigned char)finalPermutation[i]);
     
     // (Memory Freeing) ------------------------------------------------------------------------
     
-    free(kPlus);
+    /*free(kPlus);
     for (int i = 16; i >= 0; i--) {
         free(splitKeys[i].c);
         free(splitKeys[i].d);
@@ -581,7 +630,7 @@ int main(){
         free(subkeys[i].k);
     
     free(subkeys);
-    free(IP);
+    free(IP);*/
     
     printf("\n");
     
