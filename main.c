@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
@@ -442,44 +443,44 @@ int main(int argc, char * argv[]){
     }
     
     for (int i = 0; i < messagesSize; i++) {
-    char *IP = applyTable(m[i].message, 64, IP_1);
-    
-    typedef struct s_messageSplit{
-        char *l;
-        char *r;
-    }t_messageSplit;
-    
-    t_messageSplit messageSplit[17];
-    messageSplit[0].l = malloc(4*sizeof(char));
-    messageSplit[0].r = malloc(4*sizeof(char));
-    
-    copyString(messageSplit[0].l, IP, 0, 3);
-    copyString(messageSplit[0].r, IP, 4, 7);
-    
-    // 16 x L(n) = R(n-1) | R(n) = L(n-1) + f(R(n-1), K(n))
-    int j;
-    if (mode) j = 1;
-    else j = 16;
-    for (int i = 1; i < 17; i++) {
-        messageSplit[i].r = xorString(messageSplit[i-1].l, f(messageSplit[i-1].r, subkeys[j].k), 4);
-        messageSplit[i].l = malloc(4*sizeof(char));
-        copyString(messageSplit[i].l, messageSplit[i-1].r, 0, 3);
-        if (mode) j++;
-        else j--;
-    }
-    
-    char *R16L16 = malloc(9*sizeof(char));
-    R16L16[8] = '\0';
-    copyString(R16L16, messageSplit[16].r, 0, 3);
-    for (int i = 4; i < 8; i++) {
-        R16L16[i] = messageSplit[16].l[i-4];
-    }
-    char *finalPermutation = applyTable(R16L16, 64, FINAL_PERMUTATION);
-    
-    strncat(completeFinalPermutation, finalPermutation, 8);
-    
-    if(mode)
-        writeToFile(finalPermutation, "cyphertext");
+        char *IP = applyTable(m[i].message, 64, IP_1);
+
+        typedef struct s_messageSplit{
+            char *l;
+            char *r;
+        }t_messageSplit;
+
+        t_messageSplit messageSplit[17];
+        messageSplit[0].l = malloc(4*sizeof(char));
+        messageSplit[0].r = malloc(4*sizeof(char));
+
+        copyString(messageSplit[0].l, IP, 0, 3);
+        copyString(messageSplit[0].r, IP, 4, 7);
+
+        // 16 x L(n) = R(n-1) | R(n) = L(n-1) + f(R(n-1), K(n))
+        int j;
+        if (mode) j = 1;
+        else j = 16;
+        for (int i = 1; i < 17; i++) {
+            messageSplit[i].r = xorString(messageSplit[i-1].l, f(messageSplit[i-1].r, subkeys[j].k), 4);
+            messageSplit[i].l = malloc(4*sizeof(char));
+            copyString(messageSplit[i].l, messageSplit[i-1].r, 0, 3);
+            if (mode) j++;
+            else j--;
+        }
+
+        char *R16L16 = malloc(9*sizeof(char));
+        R16L16[8] = '\0';
+        copyString(R16L16, messageSplit[16].r, 0, 3);
+        for (int i = 4; i < 8; i++) {
+            R16L16[i] = messageSplit[16].l[i-4];
+        }
+        char *finalPermutation = applyTable(R16L16, 64, FINAL_PERMUTATION);
+
+        strncat(completeFinalPermutation, finalPermutation, 8);
+
+        if(mode)
+            writeToFile(finalPermutation, "cyphertext");
         
         free(IP);
         for(int i = 0; i < 17; i++){
@@ -490,36 +491,34 @@ int main(int argc, char * argv[]){
         free(finalPermutation);
     }
     
-    printf(ANSI_COLOR_GREEN "Final Permutation: " ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_GREEN "+ Final Permutation: " ANSI_COLOR_RESET);
     for (int i = 0; i < messagesSize; i++) {
         printCharAsBinary(completeFinalPermutation[i]);
     }
-    printf("\n");
+    printf("\n\n");
     
-    // Something is wrong with this first printf ...
-    
-    printf(ANSI_COLOR_GREEN "Original Message: " ANSI_COLOR_RESET);
-    printf(ANSI_COLOR_RED "HEX: " ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_GREEN "+ Original Message: \n" ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_RED "   - HEX: " ANSI_COLOR_RESET);
     for (int i = 0; i < messagesSize; i++)
         for (int j = 0; j < 8; j++)
             printf("%x ", (unsigned char)m[i].message[j]);
     if (mode){
-        printf(ANSI_COLOR_GREEN " | " ANSI_COLOR_RESET);
-        printf(ANSI_COLOR_RED "String: " ANSI_COLOR_RESET);
+        printf("\n");
+        printf(ANSI_COLOR_RED "   - String: " ANSI_COLOR_RESET);
         for (int i = 0; i < messagesSize; i++)
             printf("%s", m[i].message);
     }
-    printf("\n");
+    printf("\n\n");
     
     if (mode)
-        printf(ANSI_COLOR_GREEN "Encrypted Message: " ANSI_COLOR_RESET);
+        printf(ANSI_COLOR_GREEN "+ Encrypted Message: \n" ANSI_COLOR_RESET);
     else
-        printf(ANSI_COLOR_GREEN "Decrypted Message: " ANSI_COLOR_RESET);
-    printf(ANSI_COLOR_RED "HEX: " ANSI_COLOR_RESET);
+        printf(ANSI_COLOR_GREEN "+ Decrypted Message: \n" ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_RED "   - HEX: " ANSI_COLOR_RESET);
     for (int i = 0; i < (8*messagesSize); i++)
         printf("%x ", (unsigned char)completeFinalPermutation[i]);
-    printf(ANSI_COLOR_GREEN " | " ANSI_COLOR_RESET);
-    printf(ANSI_COLOR_RED "String: " ANSI_COLOR_RESET);
+    printf("\n");
+    printf(ANSI_COLOR_RED "   - String: " ANSI_COLOR_RESET);
     printf("%s", completeFinalPermutation);
     
     // (Memory Freeing) ------------------------------------------------------------------------
