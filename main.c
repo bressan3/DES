@@ -17,6 +17,10 @@ typedef struct s_subkeys{
     char *k;
 }subkeys;
 
+typedef struct s_messages{
+    char *message;
+}messages;
+
 const int PC_1[] = {57, 49, 41, 33, 25, 17, 9,
     1, 58, 50, 42, 34, 26, 18,
     10, 2, 59, 51, 43, 35, 27,
@@ -300,7 +304,10 @@ char* readFile(char *path){
     
     char line[BUFSIZ];
     
-    char *fileLine = fgets(line, sizeof(line), keyFile);
+    char *fileLine = malloc(BUFSIZ*sizeof(char));
+    while (fgets(line, sizeof(line), keyFile) != NULL){
+        strcat(fileLine, line);
+    }
     
     fclose(keyFile);
     
@@ -308,16 +315,22 @@ char* readFile(char *path){
 }
 
 void writeToFile(char* content, char*path){
-    FILE *cyphertextFile= fopen(path, "w+");
+    FILE *cyphertextFile= fopen(path, "a");
     
-    fputs(content, cyphertextFile);
+    fprintf(cyphertextFile, "%s", content);
+    
+    fclose(cyphertextFile);
+}
+
+void clearCypherText(char *path){
+    FILE *cyphertextFile= fopen(path, "w+");
     
     fclose(cyphertextFile);
 }
 
 int main(int argc, char * argv[]){
     
-    printf(ANSI_COLOR_RED "\n\nMake sure your key and message are both 8 bytes long max\n\n" ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_RED "\n\nMake sure your key is 64 bits long max\n\n" ANSI_COLOR_RESET);
     
     // true for encryption / false for decryption
     bool mode = true;
@@ -336,14 +349,35 @@ int main(int argc, char * argv[]){
         }
     }
     
-    char key[9], message[9];
+    if (mode)
+        clearCypherText("cyphertext");
+    
+    char key[9];
     
     if (argv[2] == NULL || argv[3] == NULL) {
         printf("\n\nExample usage: DES (-e|-d) [KEY_FILE TEXT_FILE]\n\n");
         return -1;
     } else {
         copyString(key, readFile(argv[2]), 0, 7);
-        copyString(message, readFile(argv[3]), 0, 7);
+    }
+    
+    char *ch = readFile(argv[3]);
+    int messagesSize = 0;
+    for (int i = 0; ch[i] != '\0'; i++) {
+        messagesSize++;
+    }
+    int messagesSizeTemp = messagesSize;
+    messagesSize = (messagesSize - 1)/8;
+    if ((messagesSizeTemp - 1) % 8 != 0)
+        messagesSize++;
+    if (messagesSize < 1)
+        messagesSize++;
+    
+    messages *m = malloc(messagesSize*sizeof(messages));
+    
+    for (int i = 0; i < messagesSize; i++) {
+        m[i].message = malloc(8*sizeof(char));
+        copyString(m[i].message, readFile(argv[3]), i * 8, (i * 8) + 7);
     }
     
     char *kPlus = applyTable(key, 56, PC_1);
@@ -402,7 +436,13 @@ int main(int argc, char * argv[]){
     // (Subkeys Part) -------------------------------------------------------------------------
     // (Message Part) -------------------------------------------------------------------------
     
-    char *IP = applyTable(message, 64, IP_1);
+    char *completeFinalPermutation = malloc(messagesSize*sizeof(char));
+    for (int i = 0; i < messagesSize; i++) {
+        completeFinalPermutation[i] = 0b00000000;
+    }
+    
+    for (int i = 0; i < messagesSize; i++) {
+    char *IP = applyTable(m[i].message, 64, IP_1);
     
     typedef struct s_messageSplit{
         char *l;
@@ -436,20 +476,38 @@ int main(int argc, char * argv[]){
     }
     char *finalPermutation = applyTable(R16L16, 64, FINAL_PERMUTATION);
     
-    printf(ANSI_COLOR_GREEN "Final Permutation: \n" ANSI_COLOR_RESET);
-    for (int i = 0; i < 8; i++) {
-        printCharAsBinary(finalPermutation[i]);
+    strncat(completeFinalPermutation, finalPermutation, 8);
+    
+    if(mode)
+        writeToFile(finalPermutation, "cyphertext");
+        
+        free(IP);
+        for(int i = 0; i < 17; i++){
+            free(messageSplit[i].r);
+            free(messageSplit[i].l);
+        }
+        free(R16L16);
+        free(finalPermutation);
+    }
+    
+    printf(ANSI_COLOR_GREEN "Final Permutation: " ANSI_COLOR_RESET);
+    for (int i = 0; i < messagesSize; i++) {
+        printCharAsBinary(completeFinalPermutation[i]);
     }
     printf("\n");
     
-    printf(ANSI_COLOR_GREEN "Message: " ANSI_COLOR_RESET);
+    // Something is wrong with this first printf ...
+    
+    printf(ANSI_COLOR_GREEN "Original Message: " ANSI_COLOR_RESET);
     printf(ANSI_COLOR_RED "HEX: " ANSI_COLOR_RESET);
-    for (int i = 0; i < 8; i++)
-        printf("%x", (unsigned char)message[i]);
+    for (int i = 0; i < messagesSize; i++)
+        for (int j = 0; j < 8; j++)
+            printf("%x ", (unsigned char)m[i].message[j]);
     if (mode){
         printf(ANSI_COLOR_GREEN " | " ANSI_COLOR_RESET);
         printf(ANSI_COLOR_RED "String: " ANSI_COLOR_RESET);
-        printf("%s", message);
+        for (int i = 0; i < messagesSize; i++)
+            printf("%s", m[i].message);
     }
     printf("\n");
     
@@ -458,14 +516,11 @@ int main(int argc, char * argv[]){
     else
         printf(ANSI_COLOR_GREEN "Decrypted Message: " ANSI_COLOR_RESET);
     printf(ANSI_COLOR_RED "HEX: " ANSI_COLOR_RESET);
-     for (int i = 0; i < 8; i++)
-         printf("%x", (unsigned char)finalPermutation[i]);
+    for (int i = 0; i < (8*messagesSize); i++)
+        printf("%x ", (unsigned char)completeFinalPermutation[i]);
     printf(ANSI_COLOR_GREEN " | " ANSI_COLOR_RESET);
     printf(ANSI_COLOR_RED "String: " ANSI_COLOR_RESET);
-    printf("%s", finalPermutation);
-    
-    if(mode)
-        writeToFile(finalPermutation, "cyphertext");
+    printf("%s", completeFinalPermutation);
     
     // (Memory Freeing) ------------------------------------------------------------------------
     
@@ -479,13 +534,6 @@ int main(int argc, char * argv[]){
         free(subkeys[i].k);
     
     free(subkeys);
-    free(IP);
-    for(int i = 0; i < 17; i++){
-        free(messageSplit[i].r);
-        free(messageSplit[i].l);
-    }
-    free(R16L16);
-    free(finalPermutation);
     
     printf("\n");
     

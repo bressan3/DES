@@ -1,5 +1,5 @@
 # DES
-Implementation of the DES encryption algorithm in C. <b>Works only for 8 bytes long keys and messages max</b>.
+Implementation of the DES encryption algorithm in C. <b>Works only for 64 bit long keys max</b>.
 
 This version of the DES algorithm has been implemented following these steps: [The DES Algorithm Illustrated] 
 (http://page.math.tu-berlin.de/~kant/teaching/hess/krypto-ws2006/des.htm).
