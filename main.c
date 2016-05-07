@@ -156,7 +156,7 @@ char* concatenateString(char* target, char *original, int originalLength){
 char* applyTable(char *key, int tableSize, const int *table){
     
     // Initializes k+ with all 0's
-    char *kPlus = malloc((tableSize / 8)*sizeof(char));
+    char *kPlus = malloc(((tableSize / 8)+1)*sizeof(char));
     for (int i = 0; i < 8; i++)
         kPlus[i] = 0x00;
     
@@ -170,6 +170,7 @@ char* applyTable(char *key, int tableSize, const int *table){
             kPlus[i/8] |= (0u << (7 - i%8));
         }
     }
+    kPlus[(tableSize / 8)] = '\0';
     
     return kPlus;
 }
@@ -183,7 +184,7 @@ char* leftShift(char *splitKey) {
     const uint8_t lm = (1 << bitshift) - 1;
     const uint8_t um = ~lm;
     
-    char* d = malloc(4*sizeof(char));
+    char* d = malloc(5*sizeof(char));
     
     for (int i = 0; i < 4; i++)
     {
@@ -200,6 +201,7 @@ char* leftShift(char *splitKey) {
         d[3] &= ~(1 << 4);
     
     d[3] &= ~(1 << 0);
+    d[4] = '\0';
     
     return d;
 }
@@ -207,7 +209,7 @@ char* leftShift(char *splitKey) {
 // Puts c and d back toghether forming cd
 unsigned char* concatenateBits(char *c, char *d){
     
-    unsigned char *concatenatedString = malloc(8*sizeof(char));
+    unsigned char *concatenatedString = malloc(9*sizeof(char));
     int table[] = {0b00010000, 0b00100000, 0b01000000, 0b10000000};
     
     copyString((char*)concatenatedString, c, 0, 3);
@@ -224,16 +226,18 @@ unsigned char* concatenateBits(char *c, char *d){
         temp2 >>= 4;
         concatenatedString[i + 4] = temp1 | temp2;
     }
+    concatenatedString[8] = '\0';
     
     return concatenatedString;
 }
 
 // Xors two strings of same size
 char* xorString(char *str1, char *str2, int strSize){
-    char* xorStr = malloc(strSize*sizeof(char));
+    char* xorStr = malloc((strSize+1)*sizeof(char));
     
     for (int i = 0; i < strSize; i++)
         xorStr[i] = str1[i] ^ str2[i];
+    xorStr[strSize] = '\0';
     
     return xorStr;
 }
@@ -263,7 +267,7 @@ char* f(char *previousRight, char *currentSubkey){
     // K(n)+E(R(n-1)) = B1B2B3B4B5B6B7B8 (6 by 6)
     char *xorOutputAndKey = xorString(currentSubkey, expandedPreviousRight, 6);
     
-    char *b = malloc(8*sizeof(char));
+    char *b = malloc(9*sizeof(char));
     
     // B1
     b[0] = (xorOutputAndKey[0] & 0b11111100) >> 2;
@@ -293,7 +297,9 @@ char* f(char *previousRight, char *currentSubkey){
     // B8
     b[7] = xorOutputAndKey[5] & 0b00111111;
     
-    char *sb = malloc(4*sizeof(char));
+    b[8] = '\0';
+    
+    char *sb = malloc(5*sizeof(char));
     
     sb[0] = applySTable(b[0], S1) << 4;
     sb[0] |= applySTable(b[1], S2);
@@ -306,6 +312,8 @@ char* f(char *previousRight, char *currentSubkey){
     
     sb[3] = applySTable(b[6], S7) << 4;
     sb[3] |= applySTable(b[7], S8);
+    
+    sb[4] = '\0';
     
     
     return applyTable(sb, 32, P);
@@ -378,6 +386,7 @@ int main(int argc, char * argv[]){
         return -1;
     } else {
         copyString(key, readFile(argv[2]), 0, 7);
+        key[8] = '\0';
     }
     
     char *ch = readFile(argv[3]);
@@ -395,8 +404,9 @@ int main(int argc, char * argv[]){
     messages *m = malloc(messagesSize*sizeof(messages));
     
     for (int i = 0; i < messagesSize; i++) {
-        m[i].message = malloc(8*sizeof(char));
+        m[i].message = malloc(9*sizeof(char));
         copyString(m[i].message, readFile(argv[3]), i * 8, (i * 8) + 7);
+        m[i].message[8] = '\0';
     }
     
     char *kPlus = applyTable(key, 56, PC_1);
@@ -405,8 +415,8 @@ int main(int argc, char * argv[]){
     
     // Original plus 16 other shifted versions
     splitKeys splitKeys[17];
-    splitKeys[0].c = malloc(4*sizeof(char));
-    splitKeys[0].d = malloc(4*sizeof(char));
+    splitKeys[0].c = malloc(5*sizeof(char));
+    splitKeys[0].d = malloc(5*sizeof(char));
     
     copyString(splitKeys[0].c, kPlus, 0, 3);
     // Masking
@@ -422,17 +432,21 @@ int main(int argc, char * argv[]){
         }
         splitKeys[0].d[3] = splitKeys[0].d[3] << 1;
     }
+    splitKeys[0].c[4] = '\0';
+    splitKeys[0].d[4] = '\0';
     
     // Do the left shifts according to the table
     for (int i = 1; i < 17; i ++) {
-        splitKeys[i].c = malloc(4*sizeof(char));
-        splitKeys[i].d = malloc(4*sizeof(char));
+        splitKeys[i].c = malloc(5*sizeof(char));
+        splitKeys[i].d = malloc(5*sizeof(char));
         copyString(splitKeys[i].c, splitKeys[i - 1].c, 0, 3);
         copyString(splitKeys[i].d, splitKeys[i - 1].d, 0, 3);
         for (int j = 1; j <= numLeftShifts[i - 1]; j++){
             splitKeys[i].c = leftShift(splitKeys[i].c);
             splitKeys[i].d = leftShift(splitKeys[i].d);
         }
+        splitKeys[i].c[4] = '\0';
+        splitKeys[i].d[4] = '\0';
     }
     
     //unsigned char *concatenated = concatenateBits(splitKeys[0].c, splitKeys[0].d);
@@ -448,59 +462,54 @@ int main(int argc, char * argv[]){
     
     // k[0] holds the subkey made by C0D0 and so on
     for (int i = 0; i < 17; i++) {
-        subkeys[i].k = malloc(6*sizeof(char));
+        subkeys[i].k = malloc(7*sizeof(char));
         subkeys[i].k = applyTable((char*)splitKeys[i].cd, 48, PC_2);
-    }
-    
-    for (int i = 0; i < 17; i++) {
-        printf("Key %d: ", i);
-        for (int j = 0; j < 6; j++) {
-            printCharAsBinary(subkeys[i].k[j]);
-        }
-        printf("\n");
+        subkeys[i].k[6] = '\0';
     }
     
     // (Subkeys Part) -------------------------------------------------------------------------
     // (Message Part) -------------------------------------------------------------------------
     
-    char *completeFinalPermutation = malloc(messagesSize*sizeof(char));
-    for (int i = 0; i < messagesSize; i++) {
-        completeFinalPermutation[i] = 0b00000000;
-    }
+    char *completeFinalPermutation = malloc(((messagesSize*8)+1)*sizeof(char));
+    
+    typedef struct s_messageSplit{
+        char *l;
+        char *r;
+    }t_messageSplit;
+    
+    t_messageSplit messageSplit[17];
     
     for (int i = 0; i < messagesSize; i++) {
         char *IP = applyTable(m[i].message, 64, IP_1);
 
-        typedef struct s_messageSplit{
-            char *l;
-            char *r;
-        }t_messageSplit;
-
-        t_messageSplit messageSplit[17];
-        messageSplit[0].l = malloc(4*sizeof(char));
-        messageSplit[0].r = malloc(4*sizeof(char));
+        messageSplit[0].l = malloc(5*sizeof(char));
+        messageSplit[0].r = malloc(5*sizeof(char));
 
         copyString(messageSplit[0].l, IP, 0, 3);
+        messageSplit[0].l[4] = '\0';
         copyString(messageSplit[0].r, IP, 4, 7);
-
+        messageSplit[0].r[4] = '\0';
+        
         // 16 x L(n) = R(n-1) | R(n) = L(n-1) + f(R(n-1), K(n))
         int j;
         if (mode) j = 1;
         else j = 16;
         for (int i = 1; i < 17; i++) {
             messageSplit[i].r = xorString(messageSplit[i-1].l, f(messageSplit[i-1].r, subkeys[j].k), 4);
-            messageSplit[i].l = malloc(4*sizeof(char));
+            messageSplit[i].l = malloc(5*sizeof(char));
             copyString(messageSplit[i].l, messageSplit[i-1].r, 0, 3);
+            messageSplit[i].r[4] = '\0';
+            messageSplit[i].l[4] = '\0';
             if (mode) j++;
             else j--;
         }
 
         char *R16L16 = malloc(9*sizeof(char));
-        R16L16[8] = '\0';
         copyString(R16L16, messageSplit[16].r, 0, 3);
         for (int i = 4; i < 8; i++) {
             R16L16[i] = messageSplit[16].l[i-4];
         }
+        R16L16[8] = '\0';
         char *finalPermutation = applyTable(R16L16, 64, FINAL_PERMUTATION);
 
         completeFinalPermutation = concatenateString(completeFinalPermutation, finalPermutation, 8);
@@ -518,7 +527,7 @@ int main(int argc, char * argv[]){
     }
     
     printf(ANSI_COLOR_GREEN "+ Final Permutation: " ANSI_COLOR_RESET);
-    for (int i = 0; i < messagesSize; i++) {
+    for (int i = 0; i < (messagesSize*8)+1; i++) {
         printCharAsBinary(completeFinalPermutation[i]);
     }
     printf("\n\n");
