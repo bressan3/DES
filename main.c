@@ -137,6 +137,22 @@ void copyString(char* target, char *original, int from, int to){
     }
 }
 
+char* concatenateString(char* target, char *original, int originalLength){
+    int nullIndex = 0;
+    for (int i = 0; target[i] != '\0'; i++) {
+        nullIndex++;
+    }
+    char *ch = malloc((nullIndex+originalLength+1)*sizeof(char));
+    for (int i = 0; target[i] != '\0'; i++)
+        ch[i] = target[i];
+    for (int i = 0; original[i] != '\0'; i++)
+        ch[nullIndex+i] = original[i];
+    
+    ch[nullIndex+originalLength] = '\0';
+    
+    return ch;
+}
+
 char* applyTable(char *key, int tableSize, const int *table){
     
     // Initializes k+ with all 0's
@@ -307,7 +323,9 @@ char* readFile(char *path){
     
     char *fileLine = malloc(BUFSIZ*sizeof(char));
     while (fgets(line, sizeof(line), keyFile) != NULL){
-        strcat(fileLine, line);
+        int lineSize = 0;
+        for (int i = 0; line[i] != '\0'; i++) lineSize++;
+        fileLine = concatenateString(fileLine, line, lineSize);
     }
     
     fclose(keyFile);
@@ -426,12 +444,20 @@ int main(int argc, char * argv[]){
     }
     
     // Apply PC_2
-    subkeys *subkeys = malloc(16*sizeof(subkeys));
+    subkeys *subkeys = malloc(17*sizeof(subkeys));
     
     // k[0] holds the subkey made by C0D0 and so on
     for (int i = 0; i < 17; i++) {
         subkeys[i].k = malloc(6*sizeof(char));
         subkeys[i].k = applyTable((char*)splitKeys[i].cd, 48, PC_2);
+    }
+    
+    for (int i = 0; i < 17; i++) {
+        printf("Key %d: ", i);
+        for (int j = 0; j < 6; j++) {
+            printCharAsBinary(subkeys[i].k[j]);
+        }
+        printf("\n");
     }
     
     // (Subkeys Part) -------------------------------------------------------------------------
@@ -477,7 +503,7 @@ int main(int argc, char * argv[]){
         }
         char *finalPermutation = applyTable(R16L16, 64, FINAL_PERMUTATION);
 
-        strncat(completeFinalPermutation, finalPermutation, 8);
+        completeFinalPermutation = concatenateString(completeFinalPermutation, finalPermutation, 8);
 
         if(mode)
             writeToFile(finalPermutation, "cyphertext");
